@@ -1,0 +1,107 @@
+version: "2"
+
+networks:
+  kafka-net:
+    name: kafka-net
+    driver: bridge
+
+services:
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.8
+    networks:
+        - kafka-net
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper_data:/bitnami"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+  kafka-1:
+    image: docker.io/bitnami/kafka:3.4
+    networks:
+        - kafka-net
+    ports:
+      - "9092:9092"
+    volumes:
+      - "kafka_data-1:/bitnami"
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER_INTERNAL:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: DOCKER_INTERNAL://:29092,DOCKER_EXTERNAL://:9092
+      KAFKA_ADVERTISED_LISTENERS: DOCKER_INTERNAL://kafka-1:29092,DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+    depends_on:
+      - zookeeper
+
+  kafka-2:
+    image: docker.io/bitnami/kafka:3.4
+    networks:
+        - kafka-net
+    ports:
+      - "9093:9093"
+    volumes:
+      - "kafka_data-2:/bitnami"
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER_INTERNAL:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: DOCKER_INTERNAL://:29093,DOCKER_EXTERNAL://:9093
+      KAFKA_ADVERTISED_LISTENERS: DOCKER_INTERNAL://kafka-2:29093,DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+    depends_on:
+      - zookeeper
+
+  kafka-3:
+    image: docker.io/bitnami/kafka:3.4
+    networks:
+        - kafka-net
+    ports:
+      - "9094:9094"
+    volumes:
+      - "kafka_data-3:/bitnami"
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: yes
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: DOCKER_INTERNAL:PLAINTEXT,DOCKER_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: DOCKER_INTERNAL://:29094,DOCKER_EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: DOCKER_INTERNAL://kafka-3:29094,DOCKER_EXTERNAL://${DOCKER_HOST_IP:-127.0.0.1}:9094
+      KAFKA_INTER_BROKER_LISTENER_NAME: DOCKER_INTERNAL
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_BROKER_ID: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3
+      KAFKA_NUM_PARTITIONS: 3
+    depends_on:
+      - zookeeper
+
+
+  kafdrop:
+      image: obsidiandynamics/kafdrop
+      container_name: kafdrop
+      restart: "no"
+      networks:
+        - kafka-net
+      ports:
+        - "9000:9000"
+      environment:
+        KAFKA_BROKERCONNECT: "kafka-1:29092"
+      depends_on:
+        - "kafka-1"
+        - "kafka-2"
+        - "kafka-3"
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data-1:
+    driver: local
+  kafka_data-2:
+    driver: local
+  kafka_data-3:
+    driver: local
