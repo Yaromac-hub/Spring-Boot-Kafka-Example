@@ -1,4 +1,4 @@
-#Kafka - Spring Boot - PostgreSQL
+# Kafka - Spring Boot - PostgreSQL
 
 
 This project provides a real-world example of using Spring Boot and Kafka. It is a multi-module Maven project. Inspired by Ramesh Fadatare (Java Guides)
